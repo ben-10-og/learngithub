@@ -1,4 +1,4 @@
-name: Check for Prod Reference
+name: Check for Prod References
 
 on:
   push:
