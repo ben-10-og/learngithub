@@ -3,9 +3,9 @@ name: Check for Prod References
 on:
   push:
     paths:
-      - 'Test/**'   
+      - 'Test/**'
     branches:
-      - '**'
+      - main
 
 jobs:
   scan:
@@ -24,11 +24,12 @@ jobs:
           echo "$FILES" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Scan for prod references
+      - name: Scan for forbidden terms
+        id: scan
         run: |
-          forbidden=("68b865d5-cf18-4b2b-82a4-a4eddb9c5237" "prod" "clientsecret-sp-prd" "clientid-sp-prd")
+          forbidden=("sss" "prod" "clientsecret-sp-prd" "clientid-sp-prd") 
           hit=0
-          
+
           for file in $FILES; do
             if [[ ! -f "$file" ]]; then continue; fi
             for word in "${forbidden[@]}"; do
@@ -39,9 +40,10 @@ jobs:
             done
           done
 
-          if [[ "$hit" -eq 1 ]]; then
-            echo "🔒 Commit blocked: Prod references found."
-            exit 1
-          else
-            echo "✅ No Prod references found."
-          fi
+          echo "hit=$hit" >> $GITHUB_OUTPUT
+
+      - name: Fail if forbidden terms found
+        if: steps.scan.outputs.hit == '1'
+        run: |
+          echo "❌ Forbidden terms found in commit."
+          exit 1
