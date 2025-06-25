@@ -1,0 +1,33 @@
+resources:
+  - name: pipeline-repo
+    type: git
+    source:
+      uri: https://github.com/ben-10-og/learngithub.git
+      branch: main
+      access_token: https://github.com/ben-10-og/learngithub
+
+jobs:
+  - name: update-readme
+    plan:
+      - get: pipeline-repo
+        trigger: true
+
+      - task: append-message
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source: { repository: alpine/git }
+          inputs:
+            - name: pipeline-repo
+          outputs:
+            - name: updated-repo
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                cd pipeline-repo
+                echo "This was updated by Concourse on $(date)" >> pipelines/README.md
+
+                cp -r . ../updated-repo
